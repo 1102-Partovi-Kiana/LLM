@@ -53,7 +53,7 @@ const Login = () => {
             Login
           </button>
           <button
-            onClick={() => navigate("/main")}
+            onClick={() => navigate("/signup")}
             style={{
               padding: "24px 40px",
               fontSize: "16px",
