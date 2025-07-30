@@ -1,6 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
+
 
 const Main = () => {
+  const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+      await auth.signOut();
+      navigate("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        navigate("/");
+        return;
+      }
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        setUserData(userDoc.data());
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  if (!userData) return <div>Loading user data...</div>;
+
   return (
     <div style={{ fontFamily: "Arial, sans-serif", backgroundColor: "#f7f7f7", height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* Header */}
@@ -26,8 +66,20 @@ const Main = () => {
       </div>
 
       {/* Navigation */}
-      <div style={{ backgroundColor: "#f2f2f2", padding: "10px 20px" }}>
-        <span style={{ fontWeight: "bold" }}>About Us</span>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <span>Welcome, {userData.fullName}</span>
+        <button
+          onClick={handleLogout}
+          style={{
+            backgroundColor: "#fff",
+            border: "1px solid #ccc",
+            borderRadius: "6px",
+            padding: "8px 16px",
+            cursor: "pointer"
+          }}
+        >
+          Log Out
+        </button>
       </div>
 
       {/* Chat area */}
@@ -41,7 +93,7 @@ const Main = () => {
 
             <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
               <img
-                src="https://i.imgur.com/3QkZ5zQ.jpg" // <-- Replace with local image if needed
+                src="https://i.imgur.com/3QkZ5zQ.jpg"
                 alt="room"
                 style={{ width: "150px", borderRadius: "6px" }}
               />

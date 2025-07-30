@@ -1,6 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
+import { auth, db } from "../firebase";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -14,11 +19,42 @@ const SignUp = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Optional: Add validation or send to backend
-    alert("Account created!");
-    console.log(formData);
+
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    try {
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      const user = userCredential.user;
+
+      // 2. Set display name in Firebase Auth
+      await updateProfile(user, { displayName: formData.fullName });
+
+      // 3. Save user info to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        fullName: formData.fullName,
+        username: formData.username,
+        email: formData.email,
+        createdAt: new Date().toISOString()
+      });
+
+      // 4. Redirect to dashboard
+      navigate("/main");
+    } catch (err) {
+      console.error("Signup error:", err);
+      alert(err.message);
+    }
   };
 
   return (
@@ -73,6 +109,9 @@ const SignUp = () => {
           />
           <button type="submit" style={{ ...inputStyle, backgroundColor: "#B39384", color: "white", border: "none", cursor: "pointer" }}>
             Create Account
+          </button>
+          <button onClick={() => navigate("/login")} style={inputStyle}>
+            Already have an account? Log in
           </button>
         </form>
       </div>
