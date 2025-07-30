@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Main = () => {
+  const navigate = useNavigate(); 
+
   return (
     <div style={{ fontFamily: "Arial, sans-serif", backgroundColor: "#f7f7f7", height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* Header */}
@@ -26,8 +29,22 @@ const Main = () => {
       </div>
 
       {/* Navigation */}
-      <div style={{ backgroundColor: "#f2f2f2", padding: "10px 20px" }}>
+      <div style={{ backgroundColor: "#f2f2f2", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontWeight: "bold" }}>About Us</span>
+
+        <button
+          onClick={() => navigate("/furniture")}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#B39384",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer"
+          }}
+        >
+          🪑 Try Furniture Swiper
+        </button>
       </div>
 
       {/* Chat area */}
@@ -41,7 +58,7 @@ const Main = () => {
 
             <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
               <img
-                src="https://i.imgur.com/3QkZ5zQ.jpg" // <-- Replace with local image if needed
+                src="https://i.imgur.com/3QkZ5zQ.jpg"
                 alt="room"
                 style={{ width: "150px", borderRadius: "6px" }}
               />
@@ -55,7 +72,7 @@ const Main = () => {
           <div style={{ display: "flex", gap: "20px", marginTop: "auto" }}>
             <button style={{ padding: "10px 20px", border: "1px solid #ccc", borderRadius: "6px", background: "#fff", cursor: "pointer" }}>
               Insert Image
-            </button>
+            </button>/Furniture/HomeOffice/Decoration/Frames Pictures/Frames/50370409.jpg
             <input
               type="text"
               placeholder="Type here..."
