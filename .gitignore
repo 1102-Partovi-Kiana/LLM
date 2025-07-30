@@ -24,3 +24,10 @@ yarn-debug.log*
 yarn-error.log*
 
 firebase.js
+/public/Furniture
+
+/src/data/furniture.json
+
+/src/data
+
+/backend/node_modules
