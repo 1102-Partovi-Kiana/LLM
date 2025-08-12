@@ -1,158 +1,18 @@
-// import React, { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { auth, db } from "../firebase";
-// import { doc, getDoc } from "firebase/firestore";
-
-// const Main = () => {
-//   const [userData, setUserData] = useState(null);
-//   const navigate = useNavigate();
-
-//   const [loading, setLoading] = useState(false);
-
-//   const handleLogout = async () => {
-//     try {
-//       setLoading(true);
-//       await auth.signOut();
-//       navigate("/");
-//     } catch (err) {
-//       console.error("Logout error:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     const fetchUserData = async () => {
-//       const user = auth.currentUser;
-//       if (!user) {
-//         navigate("/");
-//         return;
-//       }
-
-//       const userDoc = await getDoc(doc(db, "users", user.uid));
-//       if (userDoc.exists()) {
-//         setUserData(userDoc.data());
-//       }
-//     };
-
-//     fetchUserData();
-//   }, [navigate]);
-
-//   if (!userData) return <div>Loading user data...</div>;
-
-//   return (
-//     <div style={{ fontFamily: "Arial, sans-serif", backgroundColor: "#f7f7f7", height: "100vh", display: "flex", flexDirection: "column" }}>
-//       {/* Header */}
-//       <div style={{ backgroundColor: "#B39384", padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-//         <div style={{ color: "white", fontWeight: "bold" }}>
-//           <div>AI-Powered</div>
-//           <div>Design Assistant</div>
-//         </div>
-//         <h1 style={{ color: "white", margin: 0 }}>ROOMIFY</h1>
-//         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-//           <input
-//             type="text"
-//             placeholder="Chat History"
-//             style={{
-//               padding: "8px 12px",
-//               borderRadius: "20px",
-//               border: "1px solid #ccc",
-//               width: "160px",
-//             }}
-//           />
-//           <span style={{ cursor: "pointer" }}>❓ Help</span>
-//         </div>
-//       </div>
-
-//       {/* Navigation */}
-//       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-//         <span>Welcome, {userData.fullName}</span>
-//         <button
-//           onClick={handleLogout}
-//           style={{
-//             backgroundColor: "#fff",
-//             border: "1px solid #ccc",
-//             borderRadius: "6px",
-//             padding: "8px 16px",
-//             cursor: "pointer"
-//           }}
-//         >
-//           Log Out
-//       <div style={{ backgroundColor: "#f2f2f2", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-//         <span style={{ fontWeight: "bold" }}>About Us</span>
-
-//         <button
-//           onClick={() => navigate("/furniture")}
-//           style={{
-//             padding: "8px 16px",
-//             backgroundColor: "#B39384",
-//             color: "white",
-//             border: "none",
-//             borderRadius: "6px",
-//             cursor: "pointer"
-//           }}
-//         >
-//           🪑 Try Furniture Swiper
-//         </button>
-//       </div>
-
-//       {/* Chat area */}
-//       <div style={{ flex: 1, padding: "20px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-//         <div style={{ backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px", width: "90%", height: "100%", display: "flex", flexDirection: "column", padding: "20px", gap: "20px" }}>
-//           {/* Chat Bubbles */}
-//           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-//             <div style={{ alignSelf: "flex-start", backgroundColor: "#f1f1f1", padding: "10px 15px", borderRadius: "10px", maxWidth: "300px" }}>
-//               Dawg, you gatta blow up that room...
-//             </div>
-
-//             <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
-//               <img
-//                 src="https://i.imgur.com/3QkZ5zQ.jpg"
-//                 alt="room"
-//                 style={{ width: "150px", borderRadius: "6px" }}
-//               />
-//               <div style={{ backgroundColor: "#f1f1f1", padding: "10px 15px", borderRadius: "10px", marginTop: "5px", display: "inline-block" }}>
-//                 Make my room cooler bru bru
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Input Bar */}
-//           <div style={{ display: "flex", gap: "20px", marginTop: "auto" }}>
-//             <button style={{ padding: "10px 20px", border: "1px solid #ccc", borderRadius: "6px", background: "#fff", cursor: "pointer" }}>
-//               Insert Image
-//             </button>/Furniture/HomeOffice/Decoration/Frames Pictures/Frames/50370409.jpg
-//             <input
-//               type="text"
-//               placeholder="Type here..."
-//               style={{
-//                 flex: 1,
-//                 padding: "10px 15px",
-//                 border: "1px solid #ccc",
-//                 borderRadius: "6px",
-//               }}
-//             />
-//             <button style={{ padding: "10px 20px", border: "1px solid #ccc", borderRadius: "6px", background: "#fff", cursor: "pointer" }}>
-//               Ask anything
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Main;
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
+import useGeminiChat from "../hooks/useGeminiChat";
+import "./Main.css";
 
 const Main = () => {
   const [userData, setUserData] = useState(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const { sendMessage } = useGeminiChat();
 
   const handleLogout = async () => {
     try {
@@ -185,184 +45,85 @@ const Main = () => {
 
   if (!userData) return <div>Loading user data...</div>;
 
+  const PanelToggleButton = ({ onClick }) => (
+    <button className="panel-toggle" onClick={onClick}>
+      {isPanelOpen ? "←" : "→"}
+    </button>
+  );
+
+  
   return (
-    <div
-      style={{
-        fontFamily: "Arial, sans-serif",
-        backgroundColor: "#f7f7f7",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          backgroundColor: "#B39384",
-          padding: "20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ color: "white", fontWeight: "bold" }}>
-          <div>AI-Powered</div>
-          <div>Design Assistant</div>
-        </div>
-        <h1 style={{ color: "white", margin: 0 }}>ROOMIFY</h1>
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <input
-            type="text"
-            placeholder="Chat History"
-            style={{
-              padding: "8px 12px",
-              borderRadius: "20px",
-              border: "1px solid #ccc",
-              width: "160px",
-            }}
-          />
-          <span style={{ cursor: "pointer" }}>❓ Help</span>
-        </div>
-      </div>
+    <div className="main-container">
+  <div className="main-header">
+  <div className="main-header-title">
+    <div className="brand-subtitle">AI-Powered</div>
+    <div className="brand-title">Design Assistant</div>
+  </div>
 
-      {/* Navigation */}
-      <div style={{ display: "flex", gap: "10px", alignItems: "center", padding: "10px 20px" }}>
-        <span>Welcome, {userData.fullName}</span>
-        <button
-          onClick={handleLogout}
-          style={{
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-            padding: "8px 16px",
-            cursor: "pointer",
-          }}
-        >
-          Log Out
-        </button>
-      </div>
+  <h1 className="main-h1">ROOMIFY</h1>
+  <div className="main-help">
+    {!isPanelOpen && <PanelToggleButton onClick={() => setIsPanelOpen(true)} />}
+    <span>❓ Help</span>
+  </div>
+</div>
 
-      {/* Action Panel */}
-      <div
-        style={{
-          backgroundColor: "#f2f2f2",
-          padding: "10px 20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span style={{ fontWeight: "bold" }}>About Us</span>
-        <button
-          onClick={() => navigate("/furniture")}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#B39384",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          🪑 Try Furniture Swiper
-        </button>
-      </div>
+{/* Side panel */}
+{isPanelOpen && (
+  <div className="side-panel open">
+    <PanelToggleButton onClick={() => setIsPanelOpen(false)} />
+    <div className="panel-content">
+      <p>Welcome, {userData.fullName}</p>
+      <button onClick={handleLogout}>Log Out</button>
+      <button onClick={() => navigate("/furniture")}>🪑 Try Furniture Swiper</button>
+      <button>❓ Help</button>
+    </div>
+  </div>
+)}
 
-      {/* Chat area */}
-      <div
-        style={{
-          flex: 1,
-          padding: "20px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            width: "90%",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            padding: "20px",
-            gap: "20px",
-          }}
-        >
-          {/* Chat Bubbles */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor: "#f1f1f1",
-                padding: "10px 15px",
-                borderRadius: "10px",
-                maxWidth: "300px",
-              }}
-            >
-              Dawg, you gatta blow up that room...
-            </div>
 
-            <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
-              <img
-                src="https://i.imgur.com/3QkZ5zQ.jpg"
-                alt="room"
-                style={{ width: "150px", borderRadius: "6px" }}
-              />
-              <div
-                style={{
-                  backgroundColor: "#f1f1f1",
-                  padding: "10px 15px",
-                  borderRadius: "10px",
-                  marginTop: "5px",
-                  display: "inline-block",
-                }}
-              >
-                Make my room cooler bru bru
-              </div>
-            </div>
+
+  <div className="chat-wrapper">
+    <div className="chat-box">
+      <div className="chat-messages">
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`chat-bubble ${msg.role === "user" ? "user-message" : "ai-message"}`}
+          >
+            <div>{msg.text}</div>
+            <div className="timestamp">12:34 PM</div>
           </div>
+        ))}
 
-          {/* Input Bar */}
-          <div style={{ display: "flex", gap: "20px", marginTop: "auto" }}>
-            <button
-              style={{
-                padding: "10px 20px",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Insert Image
-            </button>
-            <input
-              type="text"
-              placeholder="Type here..."
-              style={{
-                flex: 1,
-                padding: "10px 15px",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-              }}
-            />
-            <button
-              style={{
-                padding: "10px 20px",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Ask anything
-            </button>
-          </div>
-        </div>
+      </div>
+
+      <div className="chat-input-row">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type here..."
+          className="chat-input"
+        />
+        <button
+          onClick={async () => {
+            if (!input.trim()) return;
+            const userMessage = { role: "user", text: input };
+            setMessages((prev) => [...prev, userMessage]);
+            setInput("");
+
+            const responseText = await sendMessage(input);
+            const aiMessage = { role: "ai", text: responseText };
+            setMessages((prev) => [...prev, aiMessage]);
+          }}
+          className="send-button"
+        >
+          Ask anything
+        </button>
       </div>
     </div>
+  </div>
+</div>
   );
 };
 
