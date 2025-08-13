@@ -22,6 +22,20 @@ const Main = () => {
   const filePickerRef = useRef(null);
   const createdUrlsRef = useRef([]); // track object URLs to revoke
 
+  // convert a File to { mimeType, data (base64-no-prefix) }
+  function fileToInlineData(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const result = r.result; // "data:<mime>;base64,AAAA..."
+        const [, base64] = String(result).split(";base64,");
+        resolve({ mimeType: file.type || "application/octet-stream", data: base64 });
+      };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
   // --- handlers ---
   function handlePickImages(e) {
     const files = Array.from(e.target.files || []);
@@ -63,29 +77,76 @@ const Main = () => {
     chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
   }, [chatMessages]);
 
-  // send message (now supports text + attachments)
-  function sendMessage(e) {
+  async function sendMessage(e) {
     e?.preventDefault?.();
+
     const text = chatInput.trim();
     if (!text && draftAttachments.length === 0) return;
 
-    const attachments = draftAttachments.map((a) => ({
-      kind: "image",
-      src: a.src,
-      name: a.name,
-      size: a.size,
-    }));
-
-    const msg = {
+    // 1) Optimistically add my message to UI
+    const myMsg = {
       id: crypto.randomUUID?.() ?? String(Date.now()),
       sender: "me",
       text,
-      attachments, // may be []
+      attachments: draftAttachments.map((a) => ({
+        kind: "image",
+        src: a.src,
+        name: a.name,
+        size: a.size,
+      })),
     };
-
-    setChatMessages((prev) => [...prev, msg]);
+    setChatMessages((prev) => [...prev, myMsg]);
     setChatInput("");
-    setDraftAttachments([]); // clear preview
+    const currentDraft = draftAttachments; // capture
+    setDraftAttachments([]);
+
+    try {
+      // 2) Build Gemini history from prior messages (text-only for now)
+      const history = chatMessages
+        .filter((m) => m.sender !== "system")
+        .map((m) => ({
+          role: m.sender === "me" ? "user" : "model",
+          parts: m.text ? [{ text: m.text }] : [],
+        }));
+
+      // 3) Convert current draft images to inline base64
+      const images = await Promise.all(
+        currentDraft.map((a) => fileToInlineData(a.file))
+      );
+
+      // 4) Call backend
+      const API_BASE = process.env.REACT_APP_GEMINI_API_KEY || "http://localhost:5050";
+      const resp = await fetch(`${API_BASE}/api/gemini/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ history, inputText: text, images }),
+      });
+
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || "Gemini failed");
+
+      // 5) Append Gemini reply
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID?.() ?? String(Date.now() + 1),
+          sender: "bot",
+          text: data.text || "(no response)",
+          attachments: [],
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+      // Optional: show an error bubble
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID?.() ?? String(Date.now() + 2),
+          sender: "system",
+          text: "Gemini request failed. Please try again.",
+        },
+      ]);
+    }
   }
 
   // auth / user data
